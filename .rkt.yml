@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://git.rockfin.com/raw/RocketTechnology/.rkt.yml/main/schema.json
+
+app-id: 221507
+app-name: PaLP
+hal-app-id: 19904
+hal-org-id: 472
+
+hal-test-deploy-config: 135062
+hal-beta-deploy-config: 135063
+hal-prod-deploy-config: 135064
+
+hal-test-pipeline-config: 135071
+hal-beta-pipeline-config: 135072
+hal-prod-pipeline-config: 135073
+
+hal-test-model-config: 135068
+hal-beta-model-config: 135069
+hal-prod-model-config: 135070
+
+hal-test-orchestration-config: 135065
+hal-beta-orchestration-config: 135066
+hal-prod-orchestration-config: 135067

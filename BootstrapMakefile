@@ -1,0 +1,98 @@
+TEST_PATH=./tests
+SHELL := /bin/bash
+
+.PHONY: build clean-build clean-pyc venv dependencies test-dependencies doc-dependencies clean-venv build-docs view-docs clean-docs test test-reports clean-test
+
+.DEFAULT: help
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+clean-build: ## Remove build artifacts.
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
+
+clean-pyc: ## Remove python artifacts.
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f  {} +
+
+venv: ## Create a virtual environment
+	python3.9 -m venv .bootstrap_venv
+	.bootstrap_venv/bin/pip install --upgrade pip
+	.bootstrap_venv/bin/pip install --upgrade setuptools
+	.bootstrap_venv/bin/pip install --upgrade wheel
+	.bootstrap_venv/bin/pip install -r bootstrap_requirements.txt --index-url https://artifactory.foc.zone/artifactory/api/pypi/pypi-remote/simple
+
+dependencies: ## Installs packages in requirements.txt into the virtual environment
+	pip install -r requirements.txt --index-url https://artifactory.foc.zone/artifactory/api/pypi/rdf-pypi-virtual/simple --extra-index-url https://artifactory.foc.zone/artifactory/api/pypi/pypi-remote/simple
+
+test-dependencies: ## Installs packages in test_requirements.txt into the virtual environment
+	pip install -r test_requirements.txt --index-url https://artifactory.foc.zone/artifactory/api/pypi/pypi-remote/simple
+
+doc-dependencies: ## Installs packages in doc_requirements.txt into the virtual environment
+	pip install -r doc_requirements.txt --index-url https://artifactory.foc.zone/artifactory/api/pypi/pypi-remote/simple
+
+launch-cookiecutter: ## Run the cookie cutter template
+	mlops_project --skip-if-file-exists --accept-hooks yes --overwrite-if-exists
+
+clean-venv: ## Uninstall all packages in virtual environment.
+	pip freeze | xargs pip uninstall -y
+
+build-docs: ## Build the html documentation.
+	mkdocs build
+
+view-docs: ## Start a web browser pointed at the html documentation.
+	open ./site/index.html
+
+clean-docs: ## Delete all files in the /docs/build directory.
+	rm -rf site
+
+test: clean-pyc  ## Run all tests found in the /tests directory.
+	py.test --verbose --color=yes $(TEST_PATH)
+
+run-eks-tests: clean-pyc  ## Run all tests found in the /tests/unit_tests directory.
+	echo "Running unit tests for EKS Reporting"
+	py.test -s --verbose --color=yes $(TEST_PATH)/reporting
+
+unit-tests: clean-pyc  ## Run all tests found in the /tests/unit_tests directory.
+	echo "Running unit tests"
+	py.test -s --verbose --color=yes $(TEST_PATH)
+
+unit-test-reports: clean-pyc ## Run all tests found in the /tests/unit_tests directory and output unit test and code coverage reports
+	# creating the directory to hold unit test report, if it doesn't exist
+	mkdir -p sonar_reports
+	# running the unit test suite
+	# using the python interpreter to execute pytest command so that it will work in CircleCI
+	-python -m coverage run --source app -m pytest --junitxml=sonar_reports/unit_tests.xml --verbose --color=yes $(TEST_PATH)
+	# creating an xml coverage report
+	-python -m coverage xml -o ./sonar_reports/test_coverage.xml
+	# creating an html coverage report
+	-python -m coverage html -d ./sonar_reports/html_report && zip -r ./sonar_reports/coverage_report.zip ./sonar_reports/html_report && rm -rf ./sonar_reports/html_report
+	# deleting the original file
+	-rm -rf .coverage
+
+clean-test: ## Delete the pytest cache files
+	rm -rf .pytest_cache
+	rm -rf sonar_reports
+	rm -rf .coverage
+
+check-annotations:  ## Check type annotations of functions and methods
+	flake8 rdf_core --max-line-length=120 --ignore=ANN101,ANN102
+
+check-codestyle:  ##  Check the style of the code
+	pycodestyle rdf_core --max-line-length=120
+
+check-docstyle:  ##  Check the style of the docstrings
+	pydocstyle rdf_core --convention=google
+
+check-security:  ## checks for common security vulnerabilities
+	bandit -r rdf_core
+
+security-report:  ## checks for common security vulnerabilities and outputs a report
+	mkdir -p sonar_reports
+	bandit -r rdf_core --format json > sonar_reports/bandit_report.json
+
+convert-examples:  ## convert the example notebooks into Markdown files in docs folder
+	jupyter nbconvert --to markdown examples/*.ipynb --output-dir='./docs/examples'

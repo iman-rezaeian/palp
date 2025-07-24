@@ -1,0 +1,23 @@
+platform: 'linux'
+system: 'docker:awscli'
+
+env:
+  global:
+    APP_ID: '221507'
+
+  beta-aws:
+    SECRET_NAME: 'sagemaker/mlops/info'
+    DEPLOYMENT_TARGET:  'beta'
+
+  prod-aws:
+    SECRET_NAME: 'sagemaker/mlops/info'
+    DEPLOYMENT_TARGET:  'prod'
+
+dist: '.artifact'
+
+build:
+  - 'docker:circleci unpack-build-from-circleci ".artifact"'
+
+deploy:
+  - 'chmod +x ./deploy.sh'
+  - './deploy.sh'

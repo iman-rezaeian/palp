@@ -1,0 +1,3 @@
+--index-url https://artifactory.foc.zone/artifactory/api/pypi/rdf-pypi-virtual/simple
+rkt-mlops-common
+rkt-mlops-development

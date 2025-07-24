@@ -1,0 +1,22 @@
+--index-url https://artifactory.foc.zone/artifactory/api/pypi/rdf-pypi-virtual/simple
+mlflow==2.13.2
+mlflow-skinny==2.13.2
+sagemaker-mlflow==0.1.0
+rkt-mlops-common >=1.0.1
+rkt-mlops-deployment
+
+pandas==2.1.4
+numpy==1.26.4
+pycaret==3.3.2
+prophet==1.1.6
+shap==0.47.2
+mlflow==2.13.2
+plotly==5.24.1
+scikit-learn==1.4.2
+multiprocesspandas==1.1.2
+pyathena==3.1.0
+sqlalchemy==2.0.35
+holidays==0.58
+lightgbm==4.6.0
+pyyaml==6.0.2
+awswrangler
